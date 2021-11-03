@@ -25,5 +25,32 @@ app.get("/rooms",(req,res)=>{
     });   
 });
 
+app.get("/rooms/:pk",(req, res)=>{ 
+    let pk = req.params.pk
+    // console.log(pk);
+
+    let myQuery = `select * 
+FROM Room
+
+left join Hotel
+on Hotel.HotelPK = Room.HotelFK
+
+where RoomPK = ${pk}`;
+
+db.executeQuery(myQuery)
+.then((result)=>{
+    // console.log("result",result);
+    if(result[0]){
+        res.send(result[0]);
+    }else{
+        res.status(404).send(`bad request`);
+    }
+})
+.catch((err)=>{
+    console.log("Error in /rooms/:pk",err);
+    res.status(500).send();
+});
+});
+
 // app.post()
 // app.put()
