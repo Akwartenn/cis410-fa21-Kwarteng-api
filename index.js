@@ -1,7 +1,9 @@
 const db = require("./dbConnectExec.js");
 const express = require("express");
+const bcrypt = require("bcryptjs");
 
 const app = express();
+app.use(express.json());
 
 app.listen(5000,()=>{console.log(`app is running on port 5000`)});
 
@@ -52,5 +54,44 @@ db.executeQuery(myQuery)
 });
 });
 
-// app.post()
+app.post("/guests", async (req, res)=>{
+    // res.send("/contacts called");
+// console.log("request body", req.body);
+let NameFirst =  req.body.NameFirst;
+let NameLast = req.body.NameLast;
+let Email = req.body.Email;
+let Phone = req.body.Phone;
+let password = req.body.Password;
+
+if(!NameFirst || !NameLast || !Email ||!Phone || !password){return res.status(400).send("Bad request")}
+
+NameFirst = NameFirst.replace("'","''");
+NameLast = NameLast.replace("'", "''");
+
+let emailCheckQuery = `select Email
+from guest
+where Email = '${Email}'`;
+
+let existingUser = await db.executeQuery(emailCheckQuery);
+console.log("existing user", existingUser);
+
+if(existingUser[0]){
+    return res.status(409).send("Duplicate email")};
+
+let hashedPassword = bcrypt.hashSync(password); 
+
+
+
+let insertQuery = 
+`INSERT INTO Guest(NameFirst,NameLast, Email, Phone, Password)
+VALUES('${NameFirst}','${NameLast}','${Email}','${Phone}','${hashedPassword}')`;
+
+db.executeQuery(insertQuery)
+.then(()=>{res.status(201).send()})
+.catch((err)=>{
+    console.log("Error in Post /Guest", err);
+    res.status(500).send();
+})
+
+})
 // app.put()
