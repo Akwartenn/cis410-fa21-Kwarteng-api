@@ -3,6 +3,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const kwartengConfig = require('./config.js');
+const auth = require('./middleware/authenticate')
 
 const app = express();
 app.use(express.json());
@@ -12,6 +13,40 @@ app.listen(5000,()=>{console.log(`app is running on port 5000`)});
 app.get("/hi",(req,res)=>{res.send("Hello World")});
 
 app.get("/",(req,res)=>{res.send("API is running")});
+
+
+
+app.post("/reviews", auth, async (req,res)=>{
+    try { 
+        let hotelFK = req.body.HotelFK;
+        let summary = req.body.Summary;
+        let rating = req.body.Rating;
+
+        if(!hotelFK || !summary || !rating || !Number.isInteger(rating)){
+            return res.status(400).send("bad request")};
+        
+      summary = summary.replace("'", "''");  
+    //   console.log("summary", summary);   
+    // console.log("here is the guest",req.guest.GuestPK);
+
+    let insertQuery = `INSERT INTO Review(Rating, Summary, HotelFK, GuestFK)
+    OUTPUT inserted.ReviewPK, inserted.Summary, inserted.Rating, inserted.HotelFK
+    VALUES('${rating}','${summary}','${hotelFK}','${req.guest.GuestPK}')`;
+
+    let insertedReview = await db.executeQuery(insertQuery);
+    // console.log("inserted Review", insertedReview);
+      
+      res.status(201).send(insertedReview[0]);
+        
+    } catch (error) {
+        console.log("error in POST /reviews", error)
+        res.status(500).send();
+    }
+})
+
+app.get("/guests/me",auth,(req,res)=>{
+    res.send(req.guest)
+})
 
 app.post("/guests/login", async (req,res)=>{
   // console.log("/guests/login called", req.body);
@@ -48,19 +83,19 @@ app.post("/guests/login", async (req,res)=>{
 
     //**** */ASK PROFESSOR ABOUT HASH PROBLEM
 
-    // if(!bcrypt.compareSync(password, user.Password)){
-    //     console.log("Invalid password");
-    //     return res.status(401).send("Invalid user crendentials");
-    // }
+    if(!bcrypt.compareSync(password, user.Password)){
+        console.log("Invalid password");
+        return res.status(401).send("Invalid user crendentials");
+    }
 
   //4.generate a token
     let token = jwt.sign({pk:user.GuestPK},kwartengConfig.JWT,{expiresIn: "60 minutes"});
     console.log("token", token);
 
   //5.save token in DB and generate a response
-    let setTokenQuery = `UPDATE Reservation
+    let setTokenQuery = `UPDATE Guest
 SET Token = '${token}'
-WHERE GuestFK = ${user.GuestPK}`;
+WHERE GuestPK = ${user.GuestPK}`;
 
 try{
     await db.executeQuery(setTokenQuery);
