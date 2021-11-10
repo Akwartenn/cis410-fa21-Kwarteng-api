@@ -3,12 +3,18 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const kwartengConfig = require('./config.js');
-const auth = require('./middleware/authenticate')
+const auth = require('./middleware/authenticate');
+const cors = require("cors");
 
 const app = express();
 app.use(express.json());
 
-app.listen(5000,()=>{console.log(`app is running on port 5000`)});
+//azurewebsites.net, colostate.edu
+app.use(cors())
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT,()=>{console.log(`app is running on port ${PORT}`)});
 
 app.get("/hi",(req,res)=>{res.send("Hello World")});
 

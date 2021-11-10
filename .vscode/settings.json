@@ -1,0 +1,4 @@
+{
+  "appService.defaultWebAppToDeploy": "/subscriptions/a252a336-9188-45af-99c3-62eb4e88de2c/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/cis410-fa21-kwarteng-api",
+  "appService.deploySubpath": "."
+}
