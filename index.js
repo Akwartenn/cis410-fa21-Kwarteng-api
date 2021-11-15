@@ -20,7 +20,24 @@ app.get("/hi",(req,res)=>{res.send("Hello World")});
 
 app.get("/",(req,res)=>{res.send("API is running")});
 
+app.get("/reviews/me", auth, async(req,res)=> {
+    //1. get the GuestPK
+    //2. query the database for user's record
+    //3. Send users reviews back to them
+})
 
+app.post("/guests/logout", auth, (req,res)=>{
+    let query = `UPDATE Guest
+    SET Token = NULL
+    WHERE GuestPK = ${req.guest.GuestPK}`;
+
+    db.executeQuery(query)
+    .then(()=>{res.status(200).send()})
+    .catch((err)=>{
+        console.log("error in POST /guests/logout", err)
+        res.status(500).send();
+    })
+})
 
 app.post("/reviews", auth, async (req,res)=>{
     try { 
