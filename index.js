@@ -22,11 +22,37 @@ app.get("/",(req,res)=>{res.send("API is running")});
 
 app.get("/reviews/me", auth, async(req,res)=> {
     //1. get the GuestPK
+    let guest =  req.guest.GuestPK;
+    // console.log("here is the guest",guest)
     //2. query the database for user's record
     //3. Send users reviews back to them
-})
 
-app.post("/guests/logout", auth, (req,res)=>{
+    let userQuery = `SELECT ReviewPK, Summary, Rating, HotelFK, HotelName, GuestFK
+    FROM Review
+    LEFT JOIN Hotel
+    ON Hotel.HotelPK = Review.HotelFK
+	Where GuestFK = ${guest};`;
+
+
+   db.executeQuery(userQuery).then((result)=>{
+        if(result[0]){
+            res.send(result);
+        }else{
+            res.status(404).send(`bad request`);
+        }
+    })
+    .catch((err)=>{
+        console.log("Error in /reviews/:pk", err);
+        res.status(500).send();
+    });
+  
+ 
+    });
+
+    
+
+
+    app.post("/guests/logout", auth, (req,res)=>{
     let query = `UPDATE Guest
     SET Token = NULL
     WHERE GuestPK = ${req.guest.GuestPK}`;
@@ -117,8 +143,8 @@ app.post("/guests/login", async (req,res)=>{
 
   //5.save token in DB and generate a response
     let setTokenQuery = `UPDATE Guest
-SET Token = '${token}'
-WHERE GuestPK = ${user.GuestPK}`;
+    SET Token = '${token}'
+    WHERE GuestPK = ${user.GuestPK}`;
 
 try{
     await db.executeQuery(setTokenQuery);
@@ -161,12 +187,12 @@ app.get("/rooms/:pk",(req, res)=>{
     // console.log(pk);
 
     let myQuery = `select * 
-FROM Room
+    FROM Room
 
-left join Hotel
-on Hotel.HotelPK = Room.HotelFK
+    left join Hotel
+    on Hotel.HotelPK = Room.HotelFK
 
-where RoomPK = ${pk}`;
+    where RoomPK = ${pk}`;
 
 db.executeQuery(myQuery)
 .then((result)=>{
